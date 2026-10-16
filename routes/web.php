@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AccountReportsController;
 use App\Http\Controllers\AccountTypeController;
 // use App\Http\Controllers\Auth;
@@ -75,9 +76,7 @@ use Illuminate\Support\Facades\Route;
 include_once 'install_r.php';
 
 Route::middleware(['setData'])->group(function () {
-    // Route::get('/', function () {
-    //     return view('welcome');
-    // });
+    Route::get('/', [LoginController::class, 'showLoginForm']);
 
     Auth::routes();
 
