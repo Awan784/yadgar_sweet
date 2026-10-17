@@ -2401,35 +2401,53 @@ function pos_print(receipt) {
 
 function printReceiptHtml(html, title, done) {
     var receiptHtml = extractReceiptBody(html);
-    var $sections = $('#receipt_section');
-    $sections.empty();
-    var $receipt = $sections.last();
-    $receipt.html(receiptHtml);
-    __currency_convert_recursively($receipt);
+    var sections = document.querySelectorAll('#receipt_section');
+    for (var s = 0; s < sections.length; s++) {
+        sections[s].innerHTML = '';
+    }
+    var receiptEl = sections[sections.length - 1];
+    receiptEl.innerHTML = receiptHtml;
+    __currency_convert_recursively($(receiptEl));
 
-    var width = receiptHtml.indexOf('ticket-58') !== -1 ? '58mm' : '80mm';
-    var iframe = document.getElementById('pos_print_iframe');
-    if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'pos_print_iframe';
-        iframe.setAttribute('aria-hidden', 'true');
-        iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;left:0;top:0;';
-        document.body.appendChild(iframe);
+    var paperWidth = receiptHtml.indexOf('ticket-58') !== -1 ? '58mm' : '80mm';
+    var contentWidth = receiptHtml.indexOf('ticket-58') !== -1 ? '50mm' : '72mm';
+    var previousTitle = document.title;
+    if (title) {
+        document.title = title;
     }
 
-    var safeTitle = $('<div>').text(title || '').html();
-    var doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(
-        '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + safeTitle + '</title><style>' +
-        '@page{size:' + width + ' 210mm;margin:2mm;}' +
-        'html,body{margin:0;padding:0;color:#000;background:#fff;}' +
-        '.ticket{width:100% !important;max-width:100% !important;}' +
-        '</style></head><body>' + $receipt.html() + '</body></html>'
-    );
-    doc.close();
+    var parent = receiptEl.parentNode;
+    var next = receiptEl.nextSibling;
+    document.body.insertBefore(receiptEl, document.body.firstChild);
 
-    var printWindow = iframe.contentWindow;
+    $('#pos-print-page-style').remove();
+    var style = document.createElement('style');
+    style.id = 'pos-print-page-style';
+    style.textContent =
+        '@page{size:' + paperWidth + ' 210mm;margin:4mm;}' +
+        'body.pos-printing{background:#fff !important;}' +
+        'body.pos-printing > :not(#receipt_section){display:none !important;}' +
+        'body.pos-printing > #receipt_section{display:block !important;position:static !important;width:' + contentWidth + ' !important;max-width:' + contentWidth + ' !important;margin:0 !important;padding:0 !important;color:#000 !important;background:#fff !important;overflow:visible !important;}' +
+        'body.pos-printing > #receipt_section *{visibility:visible !important;color:#000 !important;}' +
+        'body.pos-printing > #receipt_section .ticket{width:100% !important;max-width:100% !important;}';
+    document.head.appendChild(style);
+    document.body.classList.add('pos-printing');
+
+    var cleaned = false;
+    var cleanup = function() {
+        if (cleaned) {
+            return;
+        }
+        cleaned = true;
+        document.body.classList.remove('pos-printing');
+        $('#pos-print-page-style').remove();
+        document.title = previousTitle;
+        receiptEl.removeAttribute('style');
+        if (parent) {
+            parent.insertBefore(receiptEl, next);
+        }
+    };
+
     if (typeof done === 'function') {
         var finished = false;
         var finish = function() {
@@ -2437,17 +2455,23 @@ function printReceiptHtml(html, title, done) {
                 return;
             }
             finished = true;
-            printWindow.removeEventListener('afterprint', finish);
+            window.removeEventListener('afterprint', finish);
+            cleanup();
             setTimeout(done, 300);
         };
-        printWindow.addEventListener('afterprint', finish);
+        window.addEventListener('afterprint', finish);
+    } else {
+        window.addEventListener('afterprint', function once() {
+            window.removeEventListener('afterprint', once);
+            cleanup();
+        });
     }
 
     var startPrint = function() {
-        printWindow.focus();
-        printWindow.print();
+        window.focus();
+        window.print();
     };
-    var imgs = doc.images;
+    var imgs = receiptEl.getElementsByTagName('img');
     var pending = 0;
     for (var i = 0; i < imgs.length; i++) {
         if (!imgs[i].complete) {
@@ -2457,7 +2481,7 @@ function printReceiptHtml(html, title, done) {
         }
     }
     if (pending === 0) {
-        setTimeout(startPrint, 300);
+        setTimeout(startPrint, 200);
     }
 
     function imageDone() {
