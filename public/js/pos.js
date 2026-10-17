@@ -2400,26 +2400,36 @@ function pos_print(receipt) {
 }
 
 function printReceiptHtml(html, title, done) {
-    var previousTitle = document.title;
-    if (title) {
-        document.title = title;
-    }
-
     var receiptHtml = extractReceiptBody(html);
     var $sections = $('#receipt_section');
     $sections.empty();
     var $receipt = $sections.last();
     $receipt.html(receiptHtml);
     __currency_convert_recursively($receipt);
-    document.body.classList.add('pos-printing');
-    applyPosPrintPage(receiptHtml);
 
-    var cleanup = function() {
-        document.body.classList.remove('pos-printing');
-        $('#pos-print-page-style').remove();
-        document.title = previousTitle;
-    };
+    var width = receiptHtml.indexOf('ticket-58') !== -1 ? '58mm' : '80mm';
+    var iframe = document.getElementById('pos_print_iframe');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'pos_print_iframe';
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;left:0;top:0;';
+        document.body.appendChild(iframe);
+    }
 
+    var safeTitle = $('<div>').text(title || '').html();
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(
+        '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + safeTitle + '</title><style>' +
+        '@page{size:' + width + ' 210mm;margin:2mm;}' +
+        'html,body{margin:0;padding:0;color:#000;background:#fff;}' +
+        '.ticket{width:100% !important;max-width:100% !important;}' +
+        '</style></head><body>' + $receipt.html() + '</body></html>'
+    );
+    doc.close();
+
+    var printWindow = iframe.contentWindow;
     if (typeof done === 'function') {
         var finished = false;
         var finish = function() {
@@ -2427,16 +2437,35 @@ function printReceiptHtml(html, title, done) {
                 return;
             }
             finished = true;
-            window.removeEventListener('afterprint', finish);
-            cleanup();
+            printWindow.removeEventListener('afterprint', finish);
             setTimeout(done, 300);
         };
-        window.addEventListener('afterprint', finish);
-    } else {
-        setTimeout(cleanup, 1200);
+        printWindow.addEventListener('afterprint', finish);
     }
 
-    __print_receipt('receipt_section');
+    var startPrint = function() {
+        printWindow.focus();
+        printWindow.print();
+    };
+    var imgs = doc.images;
+    var pending = 0;
+    for (var i = 0; i < imgs.length; i++) {
+        if (!imgs[i].complete) {
+            pending++;
+            imgs[i].addEventListener('load', imageDone);
+            imgs[i].addEventListener('error', imageDone);
+        }
+    }
+    if (pending === 0) {
+        setTimeout(startPrint, 300);
+    }
+
+    function imageDone() {
+        pending--;
+        if (pending <= 0) {
+            setTimeout(startPrint, 100);
+        }
+    }
 }
 
 function extractReceiptBody(html) {
@@ -2450,23 +2479,6 @@ function extractReceiptBody(html) {
         return styleHtml + bodyMatch[1];
     }
     return html;
-}
-
-function applyPosPrintPage(html) {
-    $('#pos-print-page-style').remove();
-    var width = null;
-    if (html.indexOf('ticket-58') !== -1) {
-        width = '58mm';
-    } else if (html.indexOf('ticket-80') !== -1 || html.indexOf('ticket') !== -1) {
-        width = '80mm';
-    }
-    if (!width) {
-        return;
-    }
-    var style = document.createElement('style');
-    style.id = 'pos-print-page-style';
-    style.textContent = '@page { size: ' + width + ' auto; margin: 0; }';
-    document.head.appendChild(style);
 }
 
 function calculate_discounted_unit_price(row) {
