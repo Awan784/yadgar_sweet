@@ -2391,20 +2391,42 @@ function pos_print(receipt) {
         }
 
     } else if (receipt.html_content != '') {
-        var title = document.title;
-        if (typeof receipt.print_title != 'undefined') {
-            document.title = receipt.print_title;
-        }
+        printReceiptHtml(receipt.html_content, receipt.print_title, function() {
+            if (receipt.token_html) {
+                printReceiptHtml(receipt.token_html, 'Token ' + (receipt.print_title || ''));
+            }
+        });
+    }
+}
 
-        //If printer type browser then print content
-        $('#receipt_section').html(receipt.html_content);
-        __currency_convert_recursively($('#receipt_section'));
-        __print_receipt('receipt_section');
+function printReceiptHtml(html, title, done) {
+    var previousTitle = document.title;
+    if (title) {
+        document.title = title;
+    }
 
+    $('#receipt_section').html(html);
+    __currency_convert_recursively($('#receipt_section'));
+
+    if (typeof done === 'function') {
+        var finished = false;
+        var finish = function() {
+            if (finished) {
+                return;
+            }
+            finished = true;
+            window.removeEventListener('afterprint', finish);
+            document.title = previousTitle;
+            setTimeout(done, 300);
+        };
+        window.addEventListener('afterprint', finish);
+    } else {
         setTimeout(function() {
-            document.title = title;
+            document.title = previousTitle;
         }, 1200);
     }
+
+    __print_receipt('receipt_section');
 }
 
 function calculate_discounted_unit_price(row) {

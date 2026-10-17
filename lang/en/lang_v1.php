@@ -300,6 +300,7 @@ return [
     'english_arabic_requires_intl' => 'English-Arabic design requires PHP intl NumberFormatter. Please enable the intl extension to use it.',
     'express_checkout_cash' => 'Cash',
     'cash_received' => 'Cash received',
+    'token' => 'Token',
     'cash_less_than_bill' => 'Cash received is less than the bill amount.',
     'express_checkout_card' => 'Card',
     'checkout_multi_pay' => 'Multiple Pay',

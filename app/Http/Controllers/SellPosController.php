@@ -779,6 +779,10 @@ class SellPosController extends Controller
         }
 
         $output['print_title'] = $receipt_details->invoice_no;
+        $output['token_html'] = view('sale_pos.receipts.token', [
+            'business_name' => $business_details->name,
+            'invoice_no' => $receipt_details->invoice_no,
+        ])->render();
         //If print type browser - return the content, printer - return printer config data, and invoice format config
         if ($receipt_printer_type == 'printer') {
             $output['print_type'] = 'printer';
