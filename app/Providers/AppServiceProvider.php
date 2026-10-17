@@ -72,6 +72,10 @@ class AppServiceProvider extends ServiceProvider
 
 
         $asset_v = config('constants.asset_version', 1);
+        $pos_js = public_path('js/pos.js');
+        if (is_file($pos_js)) {
+            $asset_v = filemtime($pos_js);
+        }
         View::share('asset_v', $asset_v);
 
         // Share the list of modules enabled in sidebar
