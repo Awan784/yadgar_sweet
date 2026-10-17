@@ -697,6 +697,32 @@ tr.details td.details-control {
     .print_section{
         display: inline !important;
     }
+    body.pos-printing,
+    body.pos-printing .thetop,
+    body.pos-printing main{
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+        display: block !important;
+    }
+    body.pos-printing #scrollable-container,
+    body.pos-printing .scrolltop,
+    body.pos-printing .modal,
+    body.pos-printing .no-print{
+        display: none !important;
+    }
+    body.pos-printing #receipt_section{
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: static !important;
+    }
+    body.pos-printing #receipt_section .ticket{
+        width: 100% !important;
+        max-width: 100% !important;
+    }
     .modal-xl{
         width: 100% !important;
     }

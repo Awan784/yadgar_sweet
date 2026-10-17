@@ -384,7 +384,9 @@ function __sum_stock(table, class_name, label_direction = 'right') {
 
 function __print_receipt(section_id = null) {
     if (section_id) {
-        var imgs = document.getElementById(section_id).getElementsByTagName("img");
+        var sections = document.querySelectorAll('#' + section_id);
+        var section = sections.length ? sections[sections.length - 1] : document.getElementById(section_id);
+        var imgs = section.getElementsByTagName("img");
     } else {
         var imgs = document.images;
     }

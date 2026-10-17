@@ -1,4 +1,4 @@
-<div style="width: 100%; text-align: center; font-family: Arial, Helvetica, sans-serif; padding: 8px 0;">
+<div class="ticket ticket-80" style="width: 100%; text-align: center; font-family: Arial, Helvetica, sans-serif; padding: 8px 0;">
     @if (!empty($business_name))
         <div style="font-size: 16px; font-weight: bold;">{{ $business_name }}</div>
     @endif

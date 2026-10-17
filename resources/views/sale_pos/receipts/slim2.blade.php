@@ -9,7 +9,7 @@
         <title>Receipt-{{$receipt_details->invoice_no}}</title>
     </head>
     <body>
-        <div class="ticket">
+        <div class="ticket ticket-58">
 			@if(empty($receipt_details->letter_head))
 				@if(!empty($receipt_details->logo))
 					<div class="text-box centered">

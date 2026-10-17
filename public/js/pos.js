@@ -2405,8 +2405,20 @@ function printReceiptHtml(html, title, done) {
         document.title = title;
     }
 
-    $('#receipt_section').html(html);
-    __currency_convert_recursively($('#receipt_section'));
+    var receiptHtml = extractReceiptBody(html);
+    var $sections = $('#receipt_section');
+    $sections.empty();
+    var $receipt = $sections.last();
+    $receipt.html(receiptHtml);
+    __currency_convert_recursively($receipt);
+    document.body.classList.add('pos-printing');
+    applyPosPrintPage(receiptHtml);
+
+    var cleanup = function() {
+        document.body.classList.remove('pos-printing');
+        $('#pos-print-page-style').remove();
+        document.title = previousTitle;
+    };
 
     if (typeof done === 'function') {
         var finished = false;
@@ -2416,17 +2428,45 @@ function printReceiptHtml(html, title, done) {
             }
             finished = true;
             window.removeEventListener('afterprint', finish);
-            document.title = previousTitle;
+            cleanup();
             setTimeout(done, 300);
         };
         window.addEventListener('afterprint', finish);
     } else {
-        setTimeout(function() {
-            document.title = previousTitle;
-        }, 1200);
+        setTimeout(cleanup, 1200);
     }
 
     __print_receipt('receipt_section');
+}
+
+function extractReceiptBody(html) {
+    if (!html) {
+        return '';
+    }
+    var styles = html.match(/<style[\s\S]*?<\/style>/gi);
+    var styleHtml = styles ? styles.join('') : '';
+    var bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch) {
+        return styleHtml + bodyMatch[1];
+    }
+    return html;
+}
+
+function applyPosPrintPage(html) {
+    $('#pos-print-page-style').remove();
+    var width = null;
+    if (html.indexOf('ticket-58') !== -1) {
+        width = '58mm';
+    } else if (html.indexOf('ticket-80') !== -1 || html.indexOf('ticket') !== -1) {
+        width = '80mm';
+    }
+    if (!width) {
+        return;
+    }
+    var style = document.createElement('style');
+    style.id = 'pos-print-page-style';
+    style.textContent = '@page { size: ' + width + ' auto; margin: 0; }';
+    document.head.appendChild(style);
 }
 
 function calculate_discounted_unit_price(row) {
