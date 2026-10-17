@@ -657,6 +657,11 @@ $(document).ready(function() {
             }
         }
 
+        if (pay_method == 'cash') {
+            openCashReceivedModal();
+            return true;
+        }
+
         //Check for remaining balance & add it in 1st payment row
         var total_payable = __read_number($('input#final_total_input'));
         var total_paying = __read_number($('input#total_paying_input'));
@@ -698,7 +703,51 @@ $(document).ready(function() {
             .focus();
     });
 
-    //on save card details
+    $('div#cash_received_modal').on('shown.bs.modal', function() {
+        $('#cash_received_amount').focus().select();
+    });
+
+    $(document).on('input change', '#cash_received_amount', function() {
+        updateCashChange();
+    });
+
+    $('#cash_received_amount').on('keypress', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            $('button#pos-print-cash').trigger('click');
+        }
+    });
+
+    $('button#pos-print-cash').click(function() {
+        var bill = __read_number($('input#final_total_input'));
+        var received = __read_number($('#cash_received_amount'));
+        received = isNaN(received) ? 0 : received;
+
+        if (received + 0.0001 < bill) {
+            $('#cash_short_message').removeClass('hide');
+            $('#cash_received_amount').focus().select();
+            return false;
+        }
+
+        $('#payment_rows_div').find('.payment-amount').each(function() {
+            __write_number($(this), 0);
+        });
+
+        var first_row = $('#payment_rows_div').find('.payment-amount').first();
+        __write_number(first_row, received);
+
+        var payment_method_dropdown = $('#payment_rows_div').find('.payment_types_dropdown').first();
+        payment_method_dropdown.val('cash');
+        payment_method_dropdown.change();
+        if ($('#change_return_method').length) {
+            $('#change_return_method').val('cash').change();
+        }
+        first_row.trigger('change');
+
+        $('div#cash_received_modal').modal('hide');
+        pos_form_obj.submit();
+    });
+
     $('button#pos-save-card').click(function() {
         $('input#card_number_0').val($('#card_number').val());
         $('input#card_holder_name_0').val($('#card_holder_name').val());
@@ -2023,6 +2072,30 @@ function pos_order_tax(price_total, discount) {
     $('span#order_tax').text(__currency_trans_from_en(order_tax, false));
 
     return order_tax;
+}
+
+function openCashReceivedModal() {
+    var total_payable = __read_number($('input#final_total_input'));
+    $('#cash_bill_amount').text(__currency_trans_from_en(total_payable, true));
+    __write_number($('#cash_received_amount'), total_payable);
+    updateCashChange();
+    $('div#cash_received_modal').modal('show');
+}
+
+function updateCashChange() {
+    var bill = __read_number($('input#final_total_input'));
+    var received = __read_number($('#cash_received_amount'));
+    bill = isNaN(bill) ? 0 : bill;
+    received = isNaN(received) ? 0 : received;
+    var change = received - bill;
+
+    if (change < -0.0001) {
+        $('#cash_change_amount').text(__currency_trans_from_en(0, true));
+        $('#cash_short_message').removeClass('hide');
+    } else {
+        $('#cash_change_amount').text(__currency_trans_from_en(change, true));
+        $('#cash_short_message').addClass('hide');
+    }
 }
 
 function calculate_balance_due() {

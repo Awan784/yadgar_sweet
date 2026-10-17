@@ -299,6 +299,8 @@ return [
     'english_arabic_design_help' => 'This design uses a combination of English & Arabic languages, which is suitable for Saudi businesses.',
     'english_arabic_requires_intl' => 'English-Arabic design requires PHP intl NumberFormatter. Please enable the intl extension to use it.',
     'express_checkout_cash' => 'Cash',
+    'cash_received' => 'Cash received',
+    'cash_less_than_bill' => 'Cash received is less than the bill amount.',
     'express_checkout_card' => 'Card',
     'checkout_multi_pay' => 'Multiple Pay',
     'tooltip_checkout_multi_pay' => 'Checkout using multiple payment methods',

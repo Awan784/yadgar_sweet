@@ -297,3 +297,38 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="cash_received_modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">@lang('lang_v1.express_checkout_cash')</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>@lang('sale.total_payable')</label>
+                    <p class="lead text-bold" id="cash_bill_amount">0.00</p>
+                </div>
+                <div class="form-group">
+                    {!! Form::label('cash_received_amount', __('lang_v1.cash_received') . ':*') !!}
+                    {!! Form::text('', null, [
+                        'class' => 'form-control input-lg input_number',
+                        'id' => 'cash_received_amount',
+                        'placeholder' => __('lang_v1.cash_received'),
+                    ]) !!}
+                </div>
+                <div class="form-group">
+                    <label>@lang('lang_v1.change_return')</label>
+                    <p class="lead text-bold text-success" id="cash_change_amount">0.00</p>
+                    <p class="text-danger hide" id="cash_short_message">@lang('lang_v1.cash_less_than_bill')</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="tw-dw-btn tw-dw-btn-neutral tw-text-white" data-dismiss="modal">@lang('messages.close')</button>
+                <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white" id="pos-print-cash">@lang('messages.print')</button>
+            </div>
+        </div>
+    </div>
+</div>
